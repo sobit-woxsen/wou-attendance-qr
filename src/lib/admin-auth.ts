@@ -1,5 +1,6 @@
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
+import { Prisma, AdminUser } from "@prisma/client";
 import { prisma } from "./prisma";
 import { generateToken, hashSessionToken, verifyHashAgainstPassword } from "./security";
 import { UnauthorizedError } from "./errors";
@@ -7,7 +8,11 @@ import { UnauthorizedError } from "./errors";
 export const ADMIN_SESSION_COOKIE = "qr_admin_session";
 const SESSION_TTL_SECONDS = 12 * 60 * 60; // 12 hours
 
-export async function createAdminSession(userId: number) {
+type AdminSessionWithUser = Prisma.AdminSessionGetPayload<{
+  include: { user: true };
+}>;
+
+export async function createAdminSession(userId: number): Promise<{ token: string; expiresAt: Date }> {
   const token = generateToken(32);
   const tokenHash = hashSessionToken(token);
   const now = new Date();
@@ -24,7 +29,7 @@ export async function createAdminSession(userId: number) {
   return { token, expiresAt };
 }
 
-export async function setAdminSessionCookie(token: string, expiresAt: Date) {
+export async function setAdminSessionCookie(token: string, expiresAt: Date): Promise<void> {
   const cookieStore = await cookies();
   cookieStore.set({
     name: ADMIN_SESSION_COOKIE,
@@ -37,12 +42,12 @@ export async function setAdminSessionCookie(token: string, expiresAt: Date) {
   });
 }
 
-export async function removeAdminSessionCookie() {
+export async function removeAdminSessionCookie(): Promise<void> {
   const cookieStore = await cookies();
   cookieStore.delete(ADMIN_SESSION_COOKIE);
 }
 
-export async function getAdminSession() {
+export async function getAdminSession(): Promise<AdminSessionWithUser | null> {
   const cookieStore = await cookies();
   const token = cookieStore.get(ADMIN_SESSION_COOKIE)?.value;
   if (!token) {
@@ -78,7 +83,7 @@ export async function getAdminSession() {
   return session;
 }
 
-export async function requireAdminSession() {
+export async function requireAdminSession(): Promise<AdminSessionWithUser> {
   const session = await getAdminSession();
   if (!session) {
     redirect("/admin/login");
@@ -86,7 +91,7 @@ export async function requireAdminSession() {
   return session;
 }
 
-export async function requireAdminSessionApi() {
+export async function requireAdminSessionApi(): Promise<AdminSessionWithUser> {
   const session = await getAdminSession();
   if (!session) {
     throw new UnauthorizedError("Admin authentication required.");
@@ -94,7 +99,7 @@ export async function requireAdminSessionApi() {
   return session;
 }
 
-export async function verifyAdminCredentials(email: string, password: string) {
+export async function verifyAdminCredentials(email: string, password: string): Promise<AdminUser | null> {
   const admin = await prisma.adminUser.findUnique({
     where: { email },
   });
@@ -111,7 +116,7 @@ export async function verifyAdminCredentials(email: string, password: string) {
   return admin;
 }
 
-export async function revokeAdminSessionByToken(token: string) {
+export async function revokeAdminSessionByToken(token: string): Promise<void> {
   const tokenHash = hashSessionToken(token);
   const existing = await prisma.adminSession.findFirst({
     where: { tokenHash, revokedAt: null },

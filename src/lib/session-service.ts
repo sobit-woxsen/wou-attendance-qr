@@ -1,4 +1,4 @@
-﻿import { SessionStatus, type Session } from "@prisma/client";
+﻿import { SessionStatus, type Session, Prisma } from "@prisma/client";
 import { prisma } from "./prisma";
 import {
   computeSessionEnd,
@@ -14,7 +14,13 @@ import { env } from "./env";
 
 let startupSweepPromise: Promise<void> | null = null;
 
-export async function ensureStartupSweep() {
+type SessionWithSection = Prisma.SessionGetPayload<{
+  include: {
+    section: { include: { semester: true } };
+  };
+}>;
+
+export async function ensureStartupSweep(): Promise<void> {
   if (!startupSweepPromise) {
     startupSweepPromise = sweepExpiredSessions().catch((error) => {
       console.error("Startup sweep failed", error);
@@ -23,7 +29,7 @@ export async function ensureStartupSweep() {
   return startupSweepPromise;
 }
 
-export async function sweepExpiredSessions() {
+export async function sweepExpiredSessions(): Promise<void> {
   const now = new Date();
   const expiredSessions = await prisma.session.findMany({
     where: {
@@ -40,7 +46,7 @@ export async function sweepExpiredSessions() {
   }
 }
 
-export async function ensureValidPasskey(passkey: string) {
+export async function ensureValidPasskey(passkey: string): Promise<void> {
   const record = await prisma.passkey.findFirst({
     orderBy: { version: "desc" },
   });
@@ -352,7 +358,7 @@ export async function lazyCloseSessionById(sessionId: string) {
   }
 }
 
-export async function getPublicSessionByShortCode(shortCode: string) {
+export async function getPublicSessionByShortCode(shortCode: string): Promise<SessionWithSection | null> {
   await ensureStartupSweep();
   const session = await prisma.session.findUnique({
     where: { shortCode },
@@ -374,7 +380,7 @@ export async function getPublicSessionByShortCode(shortCode: string) {
   return session;
 }
 
-export async function getActiveSessionForSection(sectionId: number) {
+export async function getActiveSessionForSection(sectionId: number): Promise<Session | null> {
   await ensureStartupSweep();
   const session = await prisma.session.findFirst({
     where: {

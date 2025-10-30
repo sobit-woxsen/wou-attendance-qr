@@ -1,4 +1,4 @@
-import { SessionStatus } from "@prisma/client";
+import { SessionStatus, Prisma } from "@prisma/client";
 import { prisma } from "./prisma";
 import { closeSession } from "./session-service";
 
@@ -11,7 +11,26 @@ export type SessionReportFilter = {
   };
 };
 
-export async function loadSessionReport(input: SessionReportFilter) {
+type SessionWithDetails = Prisma.SessionGetPayload<{
+  include: {
+    section: { include: { semester: true } };
+    period: true;
+  };
+}>;
+
+type SubmissionData = {
+  id: string;
+  roll: string;
+  name: string;
+  submittedAtUTC: Date;
+};
+
+export type SessionReport = {
+  session: SessionWithDetails;
+  submissions: SubmissionData[];
+};
+
+export async function loadSessionReport(input: SessionReportFilter): Promise<SessionReport | null> {
   const session =
     input.sessionId != null
       ? await prisma.session.findUnique({

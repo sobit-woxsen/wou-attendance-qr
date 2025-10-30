@@ -1,9 +1,16 @@
+import { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { PERIODS } from "@/lib/time";
 import { AdminReportsPanel } from "@/components/admin/admin-reports-panel";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
+
+type SemesterWithSections = Prisma.SemesterGetPayload<{
+  include: {
+    sections: true;
+  };
+}>;
 
 export default async function AdminReportsPage() {
   const semesters = await prisma.semester.findMany({
@@ -15,11 +22,11 @@ export default async function AdminReportsPage() {
     },
   });
 
-  const serialized = semesters.map((semester) => ({
+  const serialized = semesters.map((semester: SemesterWithSections) => ({
     id: semester.id,
     number: semester.number,
     name: semester.name,
-    sections: semester.sections.map((section) => ({
+    sections: semester.sections.map((section: { id: number; name: string }) => ({
       id: section.id,
       name: section.name,
     })),

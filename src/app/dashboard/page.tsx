@@ -1,7 +1,6 @@
 
 import { SessionStatus } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
-import { ensureStartupSweep } from "@/lib/session-service";
 import { formatIST } from "@/lib/time";
 import { SectionTile } from "@/components/dashboard/section-tile";
 
@@ -9,7 +8,6 @@ export const dynamic = "force-dynamic";
 export const revalidate = 0;
 
 export default async function DashboardPage() {
-  await ensureStartupSweep();
 
   const now = new Date();
 

@@ -3,7 +3,7 @@ import { z } from "zod";
 import { jsonNoStore, errorToResponse } from "@/lib/response";
 import { prisma } from "@/lib/prisma";
 import { getClientIp, hashIp, hashUserAgent } from "@/lib/security";
-import { enforceSubmitRateLimit } from "@/lib/rate-limit";
+import { enforceSubmitRateLimit, invalidateSubmitRateCache } from "@/lib/rate-limit";
 import { closeSession } from "@/lib/session-service";
 
 export const runtime = "nodejs";
@@ -91,6 +91,9 @@ export async function POST(request: NextRequest) {
           userAgentHash: deviceHash,
         },
       });
+
+      // Invalidate rate limit cache after successful submission
+      invalidateSubmitRateCache(ipHash, normalizedRoll);
 
       return jsonNoStore({
         status: "OK",

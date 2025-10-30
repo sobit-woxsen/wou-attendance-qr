@@ -44,6 +44,8 @@ model Passkey {
   rotatedAt DateTime @default(now())
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+
+  @@index([version])
 }
 
 model AdminUser {
@@ -92,6 +94,9 @@ model Session {
 
   @@index([dateLocal, periodId, sectionId])
   @@index([sectionId, startAtUTC])
+  @@index([status])
+  @@index([status, endAtUTC])
+  @@index([startIpHash, createdAtUTC])
 }
 
 model AttendanceSubmission {
@@ -108,6 +113,8 @@ model AttendanceSubmission {
 
   @@unique([sessionId, roll], map: "one_submit_per_roll_per_session")
   @@index([sessionId, submittedAtUTC])
+  @@index([ipHash, submittedAtUTC])
+  @@index([roll, submittedAtUTC])
 }
 
 model SessionLog {
@@ -147,6 +154,8 @@ model IdempotencyKey {
   sessionId String?
   createdAt DateTime @default(now())
   expiresAt DateTime
+
+  @@index([expiresAt])
 }
 
 enum SessionStatus {

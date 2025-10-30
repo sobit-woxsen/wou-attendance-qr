@@ -11,6 +11,7 @@ import { ForbiddenError, NotFoundError } from "./errors";
 import { generateShortCode, generateToken, hashIp, verifyHashAgainstPasskey } from "./security";
 import { enforceStartRateLimit } from "./rate-limit";
 import { env } from "./env";
+import { passkeyCache } from "./cache";
 
 let startupSweepPromise: Promise<void> | null = null;
 
@@ -41,6 +42,15 @@ export async function sweepExpiredSessions(): Promise<void> {
 }
 
 export async function ensureValidPasskey(passkey: string): Promise<void> {
+  // Create a cache key based on the passkey (use first 8 chars for cache key)
+  const cacheKey = `passkey:${passkey.substring(0, 8)}`;
+
+  // Check cache first
+  const cachedValid = passkeyCache.get(cacheKey);
+  if (cachedValid === true) {
+    return; // Valid passkey in cache
+  }
+
   const record = await prisma.passkey.findFirst({
     orderBy: { version: "desc" },
   });
@@ -53,6 +63,9 @@ export async function ensureValidPasskey(passkey: string): Promise<void> {
   if (!valid) {
     throw new ForbiddenError("Invalid passkey.");
   }
+
+  // Cache valid passkey for 5 minutes
+  passkeyCache.set(cacheKey, true, 5 * 60 * 1000);
 }
 
 export async function startSession(params: {
@@ -260,7 +273,6 @@ export async function closeSession(
   sessionId: string,
   options: { silent?: boolean } = {}
 ) {
-  await ensureStartupSweep();
   const now = new Date();
 
   return prisma.$transaction(async (tx) => {
@@ -353,7 +365,6 @@ export async function lazyCloseSessionById(sessionId: string) {
 }
 
 export async function getPublicSessionByShortCode(shortCode: string) {
-  await ensureStartupSweep();
   const session = await prisma.session.findUnique({
     where: { shortCode },
     include: {
@@ -365,17 +376,18 @@ export async function getPublicSessionByShortCode(shortCode: string) {
   if (!session) {
     return null;
   }
-  if (session.status === SessionStatus.OPEN) {
-    if (session.endAtUTC.getTime() <= Date.now()) {
-      await closeSession(session.id, { silent: true });
-      return getPublicSessionByShortCode(shortCode);
-    }
+
+  // Close if expired but don't recurse - return the session with updated status
+  if (session.status === SessionStatus.OPEN && session.endAtUTC.getTime() <= Date.now()) {
+    await closeSession(session.id, { silent: true });
+    // Return session with CLOSED status instead of recursing
+    return { ...session, status: SessionStatus.CLOSED, closedAtUTC: new Date() };
   }
+
   return session;
 }
 
 export async function getActiveSessionForSection(sectionId: number): Promise<Session | null> {
-  await ensureStartupSweep();
   const session = await prisma.session.findFirst({
     where: {
       sectionId,
@@ -386,9 +398,10 @@ export async function getActiveSessionForSection(sectionId: number): Promise<Ses
 
   if (!session) return null;
 
+  // Close if expired but don't recurse - return null since it's no longer active
   if (session.endAtUTC.getTime() <= Date.now()) {
     await closeSession(session.id, { silent: true });
-    return getActiveSessionForSection(sectionId);
+    return null;
   }
 
   return session;

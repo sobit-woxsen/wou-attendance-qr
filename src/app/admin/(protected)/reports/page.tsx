@@ -15,11 +15,11 @@ export default async function AdminReportsPage() {
     },
   });
 
-  const serialized = semesters.map((semester) => ({
+  const serialized = semesters.map((semester: typeof semesters[number]) => ({
     id: semester.id,
     number: semester.number,
     name: semester.name,
-    sections: semester.sections.map((section) => ({
+    sections: semester.sections.map((section: typeof semester.sections[number]) => ({
       id: section.id,
       name: section.name,
     })),

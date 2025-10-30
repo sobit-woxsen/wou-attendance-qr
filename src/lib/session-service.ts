@@ -1,4 +1,4 @@
-﻿import { SessionStatus, type Session, Prisma } from "@prisma/client";
+﻿import { SessionStatus, type Session } from "@prisma/client";
 import { prisma } from "./prisma";
 import {
   computeSessionEnd,
@@ -13,12 +13,6 @@ import { enforceStartRateLimit } from "./rate-limit";
 import { env } from "./env";
 
 let startupSweepPromise: Promise<void> | null = null;
-
-type SessionWithSection = Prisma.SessionGetPayload<{
-  include: {
-    section: { include: { semester: true } };
-  };
-}>;
 
 export async function ensureStartupSweep(): Promise<void> {
   if (!startupSweepPromise) {
@@ -358,7 +352,7 @@ export async function lazyCloseSessionById(sessionId: string) {
   }
 }
 
-export async function getPublicSessionByShortCode(shortCode: string): Promise<SessionWithSection | null> {
+export async function getPublicSessionByShortCode(shortCode: string) {
   await ensureStartupSweep();
   const session = await prisma.session.findUnique({
     where: { shortCode },

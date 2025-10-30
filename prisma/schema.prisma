@@ -1,0 +1,162 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Semester {
+  id        Int       @id @default(autoincrement())
+  number    Int      @unique
+  name      String
+  sections  Section[]
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+}
+
+model Section {
+  id              Int              @id @default(autoincrement())
+  name            String
+  semester        Semester         @relation(fields: [semesterId], references: [id], onDelete: Cascade)
+  semesterId      Int
+  sessions        Session[]
+  idempotencyKeys IdempotencyKey[]
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
+
+  @@unique([semesterId, name])
+}
+
+model Period {
+  id        String    @id
+  label     String
+  startHHmm String
+  endHHmm   String
+  sessions  Session[]
+}
+
+model Passkey {
+  id        Int      @id @default(autoincrement())
+  hash      String
+  version   Int
+  rotatedAt DateTime @default(now())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model AdminUser {
+  id              Int            @id @default(autoincrement())
+  email           String         @unique
+  passwordHash    String
+  passwordVersion Int
+  createdAt       DateTime       @default(now())
+  sessions        AdminSession[]
+}
+
+model AdminSession {
+  id         Int       @id @default(autoincrement())
+  user       AdminUser @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId     Int
+  tokenHash  String    @unique
+  createdAt  DateTime  @default(now())
+  expiresAt  DateTime
+  revokedAt  DateTime?
+  lastSeenAt DateTime?
+}
+
+model Session {
+  id               String                 @id @default(cuid())
+  dateLocal        String
+  period           Period                 @relation(fields: [periodId], references: [id], onDelete: Restrict)
+  periodId         String
+  section          Section                @relation(fields: [sectionId], references: [id], onDelete: Restrict)
+  sectionId        Int
+  course           String
+  facultyName      String
+  startAtUTC       DateTime
+  endAtUTC         DateTime
+  status           SessionStatus          @default(OPEN)
+  token            String                 @unique
+  tokenTail        String
+  shortCode        String                 @unique
+  startIpHash      String
+  createdAtUTC     DateTime               @default(now())
+  closedAtUTC      DateTime?
+  updatedAtUTC     DateTime               @updatedAt
+  submissions      AttendanceSubmission[]
+  logs             SessionLog?
+  generatedReports GeneratedReport[]
+  idempotencyKeys  IdempotencyKey[]       @relation("SessionIdempotencyKeys")
+
+  @@index([dateLocal, periodId, sectionId])
+  @@index([sectionId, startAtUTC])
+}
+
+model AttendanceSubmission {
+  id             String   @id @default(cuid())
+  session        Session  @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  sessionId      String
+  roll           String
+  name           String
+  submittedAtUTC DateTime @default(now())
+  ipHash         String
+  deviceHash     String?
+  userAgentHash  String?
+  createdAtUTC   DateTime @default(now())
+
+  @@unique([sessionId, roll], map: "one_submit_per_roll_per_session")
+  @@index([sessionId, submittedAtUTC])
+}
+
+model SessionLog {
+  id           Int           @id @default(autoincrement())
+  session      Session       @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  sessionId    String        @unique
+  sectionId    Int
+  periodId     String
+  dateLocal    String
+  course       String
+  facultyName  String
+  startAtUTC   DateTime
+  endAtUTC     DateTime
+  closedAtUTC  DateTime?
+  durationSec  Int
+  presentCount Int
+  status       SessionStatus
+  startIpHash  String
+  createdAtUTC DateTime      @default(now())
+}
+
+model GeneratedReport {
+  id        Int        @id @default(autoincrement())
+  session   Session    @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  sessionId String
+  type      ReportType
+  url       String?
+  createdAt DateTime   @default(now())
+}
+
+model IdempotencyKey {
+  id        Int      @id @default(autoincrement())
+  key       String   @unique
+  section   Section  @relation(fields: [sectionId], references: [id], onDelete: Cascade)
+  sectionId Int
+  session   Session? @relation("SessionIdempotencyKeys", fields: [sessionId], references: [id], onDelete: SetNull)
+  sessionId String?
+  createdAt DateTime @default(now())
+  expiresAt DateTime
+}
+
+enum SessionStatus {
+  OPEN
+  CLOSED
+  ERROR
+}
+
+enum ReportType {
+  CSV
+  PDF
+}
+

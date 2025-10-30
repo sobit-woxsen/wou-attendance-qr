@@ -1,5 +1,5 @@
 import { jsonNoStore } from "@/lib/response";
-import { requireAdminSession } from "@/lib/admin-auth";
+import { requireAdminSessionApi } from "@/lib/admin-auth";
 import { prisma } from "@/lib/prisma";
 
 export const runtime = "nodejs";
@@ -8,7 +8,7 @@ export const revalidate = 0;
 
 export async function GET() {
   try {
-    await requireAdminSession();
+    await requireAdminSessionApi();
 
     const [openSessions, totalSections, recentSubmissions] = await Promise.all([
       prisma.session.count({ where: { status: "OPEN" } }),

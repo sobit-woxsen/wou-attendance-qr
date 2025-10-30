@@ -86,6 +86,14 @@ export async function requireAdminSession() {
   return session;
 }
 
+export async function requireAdminSessionApi() {
+  const session = await getAdminSession();
+  if (!session) {
+    throw new UnauthorizedError("Admin authentication required.");
+  }
+  return session;
+}
+
 export async function verifyAdminCredentials(email: string, password: string) {
   const admin = await prisma.adminUser.findUnique({
     where: { email },

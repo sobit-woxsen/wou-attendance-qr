@@ -1,7 +1,7 @@
 import { NextRequest } from "next/server";
 import { z } from "zod";
 import { jsonNoStore } from "@/lib/response";
-import { requireAdminSession } from "@/lib/admin-auth";
+import { requireAdminSessionApi } from "@/lib/admin-auth";
 import { loadSessionReport } from "@/lib/reports";
 
 export const runtime = "nodejs";
@@ -25,7 +25,7 @@ const requestSchema = z.union([
 
 export async function POST(request: NextRequest) {
   try {
-    await requireAdminSession();
+    await requireAdminSessionApi();
     const parsed = requestSchema.parse(await request.json());
 
     const report = await loadSessionReport(

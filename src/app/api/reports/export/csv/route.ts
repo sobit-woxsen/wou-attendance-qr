@@ -1,6 +1,6 @@
 import { NextRequest } from "next/server";
 import { z } from "zod";
-import { requireAdminSession } from "@/lib/admin-auth";
+import { requireAdminSessionApi } from "@/lib/admin-auth";
 import { loadSessionReport } from "@/lib/reports";
 import { formatIST } from "@/lib/time";
 
@@ -28,7 +28,7 @@ function escapeCsvValue(value: string) {
 
 export async function POST(request: NextRequest) {
   try {
-    await requireAdminSession();
+    await requireAdminSessionApi();
     const parsed = bodySchema.parse(await request.json());
 
     const report = await loadSessionReport(

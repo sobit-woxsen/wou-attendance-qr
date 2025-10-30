@@ -1,4 +1,5 @@
 import { cookies } from "next/headers";
+import { redirect } from "next/navigation";
 import { prisma } from "./prisma";
 import { generateToken, hashSessionToken, verifyHashAgainstPassword } from "./security";
 import { UnauthorizedError } from "./errors";
@@ -29,7 +30,7 @@ export async function setAdminSessionCookie(token: string, expiresAt: Date) {
     name: ADMIN_SESSION_COOKIE,
     value: token,
     httpOnly: true,
-    secure: true,
+    secure: process.env.NODE_ENV === "production",
     sameSite: "strict",
     path: "/",
     expires: expiresAt,
@@ -80,7 +81,7 @@ export async function getAdminSession() {
 export async function requireAdminSession() {
   const session = await getAdminSession();
   if (!session) {
-    throw new UnauthorizedError("Admin authentication required.");
+    redirect("/admin/login");
   }
   return session;
 }

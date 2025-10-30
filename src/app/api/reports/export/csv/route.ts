@@ -60,8 +60,16 @@ export async function POST(request: NextRequest) {
     }
 
     const rows: string[] = [];
+
+    // Add faculty name and course name at the top
+    rows.push(`Faculty: ${escapeCsvValue(report.session.facultyName)}`);
+    rows.push(`Course: ${escapeCsvValue(report.session.course)}`);
+    rows.push(""); // Empty row for separation
+
+    // Add attendance header
     rows.push(["Roll", "Name", "Submitted At (IST)"].map(escapeCsvValue).join(","));
 
+    // Add attendance data
     for (const submission of report.submissions) {
       rows.push(
         [

@@ -26,6 +26,8 @@ export default async function AdminSessionPage({ params }: SessionPageProps) {
     notFound();
   }
 
+  type Submission = typeof report.submissions[number];
+
   return (
     <div className="space-y-6">
       <Card>
@@ -61,7 +63,7 @@ export default async function AdminSessionPage({ params }: SessionPageProps) {
               </tr>
             </thead>
             <tbody>
-              {report.submissions.map((submission) => (
+              {report.submissions.map((submission: Submission) => (
                 <tr key={submission.id} className="border-t">
                   <td className="px-3 py-2 font-mono text-sm">{submission.roll}</td>
                   <td className="px-3 py-2">{submission.name}</td>

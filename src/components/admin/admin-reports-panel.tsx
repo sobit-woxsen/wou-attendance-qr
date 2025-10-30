@@ -149,7 +149,7 @@ export function AdminReportsPanel({ semesters, periods }: AdminReportsPanelProps
       const url = URL.createObjectURL(blob);
       const link = document.createElement("a");
       const disposition = response.headers.get("content-disposition") ?? "";
-      const match = disposition.match(/filename="?(.*)"?/);
+      const match = disposition.match(/filename="?([^"]+)"?/);
       const filename = match?.[1] ?? "attendance.csv";
       link.href = url;
       link.download = filename;

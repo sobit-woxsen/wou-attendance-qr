@@ -82,7 +82,7 @@ export async function POST(request: NextRequest) {
     const userAgentHash = hashUserAgent(request.headers.get("user-agent"));
 
     // Check for duplicate device submission in the same period on the same day for the same section
-    if (deviceHash || ipHash) {
+    if (deviceHash) {
       const duplicateSubmission = await prisma.attendanceSubmission.findFirst({
         where: {
           session: {
@@ -90,10 +90,7 @@ export async function POST(request: NextRequest) {
             dateLocal: session.dateLocal,
             periodId: session.periodId,
           },
-          OR: [
-            deviceHash ? { deviceHash } : {},
-            { ipHash },
-          ].filter(condition => Object.keys(condition).length > 0),
+          deviceHash,
         },
       });
 

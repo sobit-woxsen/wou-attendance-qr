@@ -390,7 +390,7 @@ export function FacultyPanel({ semesters }: FacultyPanelProps) {
                     <DialogHeader>
                       <DialogTitle>Close session</DialogTitle>
                       <DialogDescription>
-                        Enter the passkey to close the session immediately.
+                        Enter the passkey to close the session.
                       </DialogDescription>
                     </DialogHeader>
                     <div className="space-y-2">

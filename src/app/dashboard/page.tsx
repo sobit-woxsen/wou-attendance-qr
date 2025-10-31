@@ -55,8 +55,7 @@ export default async function DashboardPage() {
       <header className="space-y-2">
         <h1 className="text-3xl font-bold">Attendance Dashboard</h1>
         <p className="text-sm text-muted-foreground">
-          Live session overview by semester and section. No student data is
-          displayed here.
+          Live session overview by semester and section.
         </p>
       </header>
 
@@ -64,7 +63,7 @@ export default async function DashboardPage() {
         {semesters.map((semester) => (
           <section key={semester.id} className="space-y-3">
             <h2 className="text-xl font-semibold">
-              Semester {semester.number} — {semester.name}
+              Semester {semester.number}
             </h2>
             <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
               {semester.sections.map((section) => {

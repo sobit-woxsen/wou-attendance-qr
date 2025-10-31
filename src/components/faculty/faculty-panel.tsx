@@ -36,12 +36,12 @@ type FacultyPanelProps = {
 
 type PeriodStatus =
   | {
-      active: true;
-      periodId: string;
-      periodLabel: string;
-      endsAtIST: string;
-      secondsRemaining: number;
-    }
+    active: true;
+    periodId: string;
+    periodLabel: string;
+    endsAtIST: string;
+    secondsRemaining: number;
+  }
   | { active: false };
 
 type ActiveSessionState = {
@@ -415,9 +415,9 @@ export function FacultyPanel({ semesters }: FacultyPanelProps) {
                   </DialogContent>
                 </Dialog>
               </div>
-              <p className="text-xs text-muted-foreground">
+              {/* <p className="text-xs text-muted-foreground">
                 Token tail: {activeSession.tokenTail}
-              </p>
+              </p> */}
             </>
           ) : (
             <div className="text-center text-sm text-muted-foreground">

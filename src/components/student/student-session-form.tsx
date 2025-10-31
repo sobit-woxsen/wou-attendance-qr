@@ -70,6 +70,8 @@ export function StudentSessionForm({ session }: StudentSessionFormProps) {
         return;
       }
       setSubmitted(true);
+      setName("");
+      setRoll("");
       toast({
         title: "Attendance recorded",
         description: result.alreadySubmitted
@@ -135,9 +137,6 @@ export function StudentSessionForm({ session }: StudentSessionFormProps) {
                   ? "Submitting..."
                   : "Mark attendance"}
             </Button>
-            <p className="text-xs text-muted-foreground">
-              Submitting twice with the same roll keeps your earliest timestamp only.
-            </p>
           </form>
         )}
       </CardContent>

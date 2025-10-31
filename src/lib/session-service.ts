@@ -116,6 +116,22 @@ export async function startSession(params: {
     );
   }
 
+  // Check if a session already exists for this section on the same day and period
+  const dateLocal = getLocalDateString(now);
+  const existingSessionInPeriod = await prisma.session.findFirst({
+    where: {
+      sectionId: section.id,
+      dateLocal,
+      periodId: currentPeriod.id,
+    },
+  });
+
+  if (existingSessionInPeriod) {
+    throw new ForbiddenError(
+      `A session already exists for this section in ${currentPeriod.label} today. Only one session per period per day is allowed.`
+    );
+  }
+
   const endAtIST = computeSessionEnd(now, currentPeriod);
   const startAtUTC = now.toUTC().toJSDate();
   const endAtUTC = endAtIST.toUTC().toJSDate();

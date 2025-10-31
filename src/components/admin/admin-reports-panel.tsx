@@ -258,7 +258,7 @@ export function AdminReportsPanel({ semesters, periods }: AdminReportsPanelProps
                 {report.session.section.name} - Semester {report.session.section.semesterNumber}
               </p>
               <p className="text-muted-foreground">
-                Period {report.session.periodLabel} - {timeFormatter.format(new Date(report.session.startAtUTC))} - {timeFormatter.format(
+                {report.session.periodLabel} - {timeFormatter.format(new Date(report.session.startAtUTC))} - {timeFormatter.format(
                   new Date(report.session.endAtUTC)
                 )}
               </p>

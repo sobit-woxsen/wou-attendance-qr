@@ -2,7 +2,7 @@ import { NextRequest } from "next/server";
 import { z } from "zod";
 import { jsonNoStore, errorToResponse } from "@/lib/response";
 import { prisma } from "@/lib/prisma";
-import { getClientIp, hashIp, hashUserAgent } from "@/lib/security";
+import { getClientIp, hashIp, hashUserAgent, hashDeviceFingerprint } from "@/lib/security";
 import { enforceSubmitRateLimit, invalidateSubmitRateCache } from "@/lib/rate-limit";
 import { closeSession } from "@/lib/session-service";
 
@@ -78,7 +78,35 @@ export async function POST(request: NextRequest) {
 
     const normalizedRoll = data.roll.trim().toUpperCase();
     const normalizedName = data.name.trim();
-    const deviceHash = hashUserAgent(request.headers.get("user-agent"));
+    const deviceHash = hashDeviceFingerprint(request);
+    const userAgentHash = hashUserAgent(request.headers.get("user-agent"));
+
+    // Check for duplicate device submission in the same period on the same day for the same section
+    if (deviceHash || ipHash) {
+      const duplicateSubmission = await prisma.attendanceSubmission.findFirst({
+        where: {
+          session: {
+            sectionId: session.sectionId,
+            dateLocal: session.dateLocal,
+            periodId: session.periodId,
+          },
+          OR: [
+            deviceHash ? { deviceHash } : {},
+            { ipHash },
+          ].filter(condition => Object.keys(condition).length > 0),
+        },
+      });
+
+      if (duplicateSubmission) {
+        return jsonNoStore(
+          {
+            error: "DUPLICATE_DEVICE",
+            message: "This device has already submitted attendance for this section in this period today.",
+          },
+          { status: 409 }
+        );
+      }
+    }
 
     try {
       const submission = await prisma.attendanceSubmission.create({
@@ -88,7 +116,7 @@ export async function POST(request: NextRequest) {
           name: normalizedName,
           ipHash,
           deviceHash,
-          userAgentHash: deviceHash,
+          userAgentHash,
         },
       });
 

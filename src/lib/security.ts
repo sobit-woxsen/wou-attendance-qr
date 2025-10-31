@@ -24,6 +24,23 @@ export function hashUserAgent(userAgent: string | null | undefined): string | un
   return hashValue(userAgent.trim().toLowerCase(), env.deviceHashSalt);
 }
 
+export function hashDeviceFingerprint(request: NextRequest): string | undefined {
+  const userAgent = request.headers.get("user-agent");
+  const acceptLanguage = request.headers.get("accept-language");
+  const acceptEncoding = request.headers.get("accept-encoding");
+
+  if (!userAgent) return undefined;
+
+  // Create a device fingerprint from multiple headers
+  const fingerprint = [
+    userAgent?.trim().toLowerCase() || "",
+    acceptLanguage?.trim().toLowerCase() || "",
+    acceptEncoding?.trim().toLowerCase() || "",
+  ].join("|");
+
+  return hashValue(fingerprint, env.deviceHashSalt);
+}
+
 export function hashSessionToken(token: string): string {
   return createHash("sha256").update(token).digest("hex");
 }

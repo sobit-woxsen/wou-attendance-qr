@@ -309,8 +309,7 @@ export function FacultyPanel({ semesters }: FacultyPanelProps) {
           <div className="flex items-center justify-between rounded-md border border-dashed border-border bg-muted/30 px-3 py-2 text-sm">
             {periodStatus.active ? (
               <span>
-                Period {periodStatus.periodId} active. {Math.floor(periodStatus.secondsRemaining / 60)}{" "}
-                minutes remaining to start a session.
+                Period {periodStatus.periodId} active.
               </span>
             ) : (
               <span>Waiting for the next period window.</span>

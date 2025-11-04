@@ -48,14 +48,13 @@ export default function DashboardSection({ semesters, sessionMap }: any) {
                   Semester {semester.number}
                 </h2>
                 <p className="text-sm">
-                  Total Subjects {semester.sections.length}
+                  Total Sections {semester.sections.length}
                 </p>
               </div>
 
               <svg
-                className={`transition-transform ${
-                  openSemester === semester.id ? "rotate-180" : "rotate-0"
-                }`}
+                className={`transition-transform ${openSemester === semester.id ? "rotate-180" : "rotate-0"
+                  }`}
                 width="20"
                 height="20"
                 viewBox="0 0 15 15"

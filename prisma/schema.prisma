@@ -9,7 +9,7 @@ datasource db {
 
 model Semester {
   id        Int       @id @default(autoincrement())
-  number    Int      @unique
+  number    Int       @unique
   name      String
   sections  Section[]
   createdAt DateTime  @default(now())
@@ -168,4 +168,3 @@ enum ReportType {
   CSV
   PDF
 }
-

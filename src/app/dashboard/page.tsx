@@ -63,7 +63,7 @@ export default async function DashboardPage() {
           </div>
 
           <div className="space-y-3 bg-white border p-5 rounded-lg w-96">
-            <h1 className="text-xl font-semibold">Total Subjects</h1>
+            <h1 className="text-xl font-semibold">Total Sections</h1>
             <p className="text-xl">
               {semesters.flatMap((sem) => sem.sections).length}
             </p>
